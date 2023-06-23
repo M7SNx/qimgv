@@ -109,6 +109,7 @@ public slots:
     void toggleMute();
     void volumeUp();
     void volumeDown();
+    void setVolume(int pos);
 
     void startPlayback();
     void showContextMenu();
