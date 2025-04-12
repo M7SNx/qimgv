@@ -50,6 +50,7 @@ signals:
     void moveUrlsRequested(QList<QString>, QString path);
     void droppedInto(const QMimeData*, QObject*, int) override;
     void draggedOver(int) override;
+    void flattenToggled(bool enabled); // Added missing signal
 
 private:
     std::shared_ptr<FolderView> folderView;

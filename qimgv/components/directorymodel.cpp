@@ -2,7 +2,8 @@
 
 DirectoryModel::DirectoryModel(QObject *parent) :
     QObject(parent),
-    fileListSource(SOURCE_DIRECTORY)
+    fileListSource(SOURCE_DIRECTORY),
+    mFlattenDirs(false)
 {
     scaler = new Scaler(&cache);
 
@@ -335,4 +336,79 @@ void DirectoryModel::reload(QString filePath) {
 void DirectoryModel::preload(QString filePath) {
     if(containsFile(filePath) && !cache.contains(filePath))
         loader.loadAsync(filePath);
+}
+
+bool DirectoryModel::flattenDirs() const {
+    return mFlattenDirs;
+}
+
+void DirectoryModel::setFlattenDirs(bool mode) {
+    if (mFlattenDirs == mode)
+        return;
+    
+    qDebug() << "DirectoryModel::setFlattenDirs - Mode:" << mode << "Current path:" << directoryPath();
+    
+    mFlattenDirs = mode;
+    
+    if (mode && !directoryPath().isEmpty()) {
+        // When enabling flattened view, we need to rebuild the file list
+        // with files from subdirectories
+        
+        // First, remember current directory
+        QString currentDir = directoryPath();
+        
+        // Get all image files recursively
+        QStringList allFiles = recursiveFileList(currentDir);
+        qDebug() << "Found" << allFiles.size() << "files recursively";
+        
+        // Reset directory to refresh and then add all files
+        dirManager.setDirectory(currentDir);
+        
+        // Add all files from subdirectories
+        int addedCount = 0;
+        for (const QString &filePath : allFiles) {
+            if (!dirManager.containsFile(filePath)) {
+                if (dirManager.forceInsertFileEntry(filePath))
+                    addedCount++;
+            }
+        }
+        qDebug() << "Added" << addedCount << "new files from subdirectories";
+        
+        // Notify that files have been added in a batch operation
+        emit filesChanged();
+    } else if (!mode && !directoryPath().isEmpty()) {
+        // When disabling flattened view, refresh the directory to remove 
+        // subdirectory files
+        QString currentDir = directoryPath();
+        dirManager.setDirectory(currentDir);
+        
+        // Notify that files have been removed in a batch operation
+        emit filesChanged();
+    }
+}
+
+QStringList DirectoryModel::recursiveFileList(const QString &dirPath) const {
+    QStringList result;
+    QDir dir(dirPath);
+    
+    // Get supported file formats and convert from QList<QByteArray> to QStringList
+    QStringList nameFilters;
+    QList<QByteArray> formats = settings->supportedFormats();
+    for(const QByteArray &format : formats) {
+        nameFilters << QString("*.") + QString(format);
+    }
+    
+    // Add all supported files in the current directory
+    QStringList files = dir.entryList(nameFilters, QDir::Files);
+    foreach(QString file, files) {
+        result.append(dir.absoluteFilePath(file));
+    }
+    
+    // Recursively process subdirectories
+    QStringList subdirs = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    foreach(QString subdir, subdirs) {
+        result.append(recursiveFileList(dir.absoluteFilePath(subdir)));
+    }
+    
+    return result;
 }

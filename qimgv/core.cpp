@@ -93,6 +93,10 @@ void Core::connectComponents() {
 
     connect(&folderViewPresenter, &DirectoryPresenter::droppedInto,
             this, qOverload<QList<QString>,QString>(&Core::movePathsTo));
+            
+    // Connect using old-style Qt4 signal-slot syntax since we can't directly access the FolderView
+    connect(mw->getFolderView().get(), SIGNAL(flattenToggled(bool)),
+            &folderViewPresenter, SLOT(onFlattenToggled(bool)));
 
     connect(scriptManager, &ScriptManager::error, mw, &MW::showError);
 
@@ -1340,18 +1344,30 @@ bool Core::loadPath(QString path) {
     stopSlideshow();
     state.delayModel = false;
     QFileInfo fileInfo(path);
+    
+    // Check if we're opening a file while in flattened mode
+    bool inFlattenedMode = false;
+    if (fileInfo.isFile() && model->flattenDirs()) {
+        inFlattenedMode = true;
+    }
+    
     if(fileInfo.isDir()) {
         state.directoryPath = QDir(path).absolutePath();
     } else if(fileInfo.isFile()) {
-        state.directoryPath = fileInfo.absolutePath();
-        if(model->directoryPath() != state.directoryPath)
-            state.delayModel = true;
+        // Only change directory if not in flattened mode
+        if (!inFlattenedMode) {
+            state.directoryPath = fileInfo.absolutePath();
+            if(model->directoryPath() != state.directoryPath)
+                state.delayModel = true;
+        }
     } else {
         mw->showError(tr("Could not open path: ") + path);
         qDebug() << "Could not open path: " << path;
         return false;
     }
-    if(!state.delayModel && !setDirectory(state.directoryPath))
+    
+    // Only set the directory if we're not in flattened mode or if it's necessary
+    if(!inFlattenedMode && (!state.delayModel && !setDirectory(state.directoryPath)))
         return false;
 
     // load file / folderview

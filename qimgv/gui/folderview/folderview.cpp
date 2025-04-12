@@ -46,6 +46,13 @@ FolderView::FolderView(QWidget *parent) :
     ui->togglePlacesPanelButton->setIconPath(":res/icons/common/buttons/panel/toggle-panel20.png");
     ui->togglePlacesPanelButton->setIconOffset(1, 0);
 
+    // Set up flatten directories toggle button
+    ui->flattenButton->setCheckable(true);
+    ui->flattenButton->setChecked(false);
+    ui->flattenButton->setIconPath(":res/icons/common/buttons/panel/flatten20t.png");
+    ui->flattenButton->setToolTip("Flatten directory tree");
+    connect(ui->flattenButton, &IconButton::toggled, this, &FolderView::onFlattenButtonToggled);
+
     ui->optionsPopupButton->setCheckable(true);
     ui->optionsPopupButton->setIconPath(":res/icons/common/buttons/panel/folderview20.png");
 
@@ -204,6 +211,11 @@ void FolderView::onSortingChanged(SortingMode mode) {
     ui->sortingComboBox->blockSignals(true);
     ui->sortingComboBox->setCurrentIndex(static_cast<int>(mode));
     ui->sortingComboBox->blockSignals(false);
+}
+
+void FolderView::onFlattenButtonToggled(bool mode) {
+    qDebug() << "FolderView::onFlattenButtonToggled - Mode:" << mode;
+    emit flattenToggled(mode);
 }
 
 FolderView::~FolderView() {

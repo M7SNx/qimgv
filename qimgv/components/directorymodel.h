@@ -72,6 +72,10 @@ public:
 
     bool containsDir(QString dirPath) const;
     FileListSource source();
+    
+    bool flattenDirs() const;
+    void setFlattenDirs(bool mode);
+    
 signals:
     void fileRemoved(QString filePath, int index);
     void fileRenamed(QString fromPath, int indexFrom, QString toPath, int indexTo);
@@ -86,12 +90,16 @@ signals:
     void indexChanged(int oldIndex, int index);
     void imageReady(std::shared_ptr<Image> img, const QString&);
     void imageUpdated(QString filePath);
+    void filesChanged(); // Added signal for batch file list changes
 
 private:
     DirectoryManager dirManager;
     Loader loader;
     Cache cache;
     FileListSource fileListSource;
+    bool mFlattenDirs;
+    
+    QStringList recursiveFileList(const QString &dirPath) const;
 
 private slots:
     void onImageReady(std::shared_ptr<Image> img, const QString &path);

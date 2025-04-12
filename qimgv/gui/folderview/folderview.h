@@ -68,6 +68,7 @@ signals:
     void moveUrlsRequested(QList<QString>, QString path);
     void droppedInto(const QMimeData*, QObject*, int) override;
     void draggedOver(int) override;
+    void flattenToggled(bool enabled);
 
 private slots:
     void onSortingSelected(int);
@@ -91,10 +92,12 @@ private slots:
     void onHomeBtn();
     void onRootBtn();
     void onTreeViewTabOut();
+    void onFlattenButtonToggled(bool checked);
 
 private:
     Ui::FolderView *ui;
     FileSystemModelCustom *dirModel;
     FVOptionsPopup *optionsPopup;
     QElapsedTimer popupTimerClutch;
+    IconButton *flattenButton;
 };

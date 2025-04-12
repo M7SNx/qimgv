@@ -34,6 +34,9 @@ public:
 
     bool showDirs();
     void setShowDirs(bool mode);
+    
+    bool flattenDirs();
+    void setFlattenDirs(bool mode);
 
     QList<QString> selectedPaths() const;
 
@@ -47,6 +50,7 @@ signals:
 public slots:
     void disconnectView();
     void reloadModel();
+    void onFlattenToggled(bool enabled);
 
 private slots:
     void generateThumbnails(QList<int>, int, bool, bool);
@@ -62,4 +66,5 @@ private:
     std::shared_ptr<DirectoryModel> model = nullptr;
     Thumbnailer thumbnailer;
     bool mShowDirs;
+    bool mFlattenDirs;
 };

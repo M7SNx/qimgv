@@ -1,6 +1,6 @@
 ﻿#include "directorypresenter.h"
 
-DirectoryPresenter::DirectoryPresenter(QObject *parent) : QObject(parent), mShowDirs(false) {
+DirectoryPresenter::DirectoryPresenter(QObject *parent) : QObject(parent), mShowDirs(false), mFlattenDirs(false) {
     connect(&thumbnailer, &Thumbnailer::thumbnailReady, this, &DirectoryPresenter::onThumbnailReady);
 }
 
@@ -50,6 +50,7 @@ void DirectoryPresenter::setModel(std::shared_ptr<DirectoryModel> newModel) {
     connect(model.get(), &DirectoryModel::dirRemoved,   this, &DirectoryPresenter::onDirRemoved);
     connect(model.get(), &DirectoryModel::dirAdded,     this, &DirectoryPresenter::onDirAdded);
     connect(model.get(), &DirectoryModel::dirRenamed,   this, &DirectoryPresenter::onDirRenamed);
+    connect(model.get(), &DirectoryModel::filesChanged, this, &DirectoryPresenter::reloadModel);
 }
 
 void DirectoryPresenter::reloadModel() {
@@ -155,6 +156,30 @@ void DirectoryPresenter::setShowDirs(bool mode) {
         return;
     mShowDirs = mode;
     populateView();
+}
+
+bool DirectoryPresenter::flattenDirs() {
+    return mFlattenDirs;
+}
+
+void DirectoryPresenter::setFlattenDirs(bool mode) {
+    if(mode == mFlattenDirs)
+        return;
+    mFlattenDirs = mode;
+    if(model) {
+        model->setFlattenDirs(mode);
+        if(mode)
+            mShowDirs = false;
+        else
+            mShowDirs = settings->folderViewMode() == FV_EXT_FOLDERS;
+    }
+    
+    populateView();
+}
+
+void DirectoryPresenter::onFlattenToggled(bool enabled) {
+    qDebug() << "DirectoryPresenter::onFlattenToggled - Enabled:" << enabled;
+    setFlattenDirs(enabled);
 }
 
 QList<QString> DirectoryPresenter::selectedPaths() const {
