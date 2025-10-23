@@ -1,6 +1,4 @@
-## :exclamation: Updates may be slow due to war in Ukraine :sunflower: :sunflower: :sunflower:
-
-qimgv | Current version: 1.0.2
+qimgv | Current version: 1.1.0
 =====
 Image viewer. Fast, easy to use. Optional video support.
 
