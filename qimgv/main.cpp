@@ -2,6 +2,9 @@
 #include <QCommandLineParser>
 #include <QStyleFactory>
 #include <QEvent>
+#include <QFile>
+#include <QTextStream>
+#include <QDateTime>
 
 #include "appversion.h"
 #include "settings.h"
@@ -18,8 +21,36 @@
 #endif
 
 //------------------------------------------------------------------------------
+QFile *logFile = nullptr;
+QTextStream *logStream = nullptr;
+
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    if(logStream) {
+        QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+        QString typeStr;
+        switch(type) {
+            case QtDebugMsg:    typeStr = "DEBUG"; break;
+            case QtWarningMsg:  typeStr = "WARN "; break;
+            case QtCriticalMsg: typeStr = "CRIT "; break;
+            case QtFatalMsg:    typeStr = "FATAL"; break;
+            case QtInfoMsg:     typeStr = "INFO "; break;
+        }
+        *logStream << "[" << timestamp << "] " << typeStr << ": " << msg << "\n";
+        logStream->flush();
+    }
+}
+
 void saveSettings() {
     delete settings;
+    if(logStream) {
+        delete logStream;
+        logStream = nullptr;
+    }
+    if(logFile) {
+        logFile->close();
+        delete logFile;
+        logFile = nullptr;
+    }
 }
 //------------------------------------------------------------------------------
 QDataStream& operator<<(QDataStream& out, const Script& v) {
@@ -34,6 +65,16 @@ QDataStream& operator>>(QDataStream& in, Script& v) {
 }
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
+
+#ifdef _WIN32
+    // Set up debug logging to file on Windows
+    logFile = new QFile("qimgv_debug.log");
+    if(logFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        logStream = new QTextStream(logFile);
+        qInstallMessageHandler(messageHandler);
+        qDebug() << "=== qimgv debug log started ===";
+    }
+#endif
 
     // force some env variables
 

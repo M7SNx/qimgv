@@ -343,7 +343,7 @@ void CopyOverlay::keyPressEvent(QKeyEvent *event) {
         int start = currentPage * itemsPerPage;
         
         // Check if this index points to a regular path widget
-        int end = std::min(start + itemsPerPage, pathWidgets.count());
+        int end = std::min(start + itemsPerPage, static_cast<int>(pathWidgets.count()));
         int itemsOnCurrentPage = end - start;
         
         if (indexOnPage < itemsOnCurrentPage) {
