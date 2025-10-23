@@ -22,13 +22,17 @@ Main window & panel        |  Folder view   |  Settings window
 
 - Basic image editing: Crop, Rotate and Resize
 
-- Ability to quickly copy / move images to different folders
+- Ability to quickly copy / move images to different folders with pagination support
 
-- Experimental video playback via libmpv
+- Experimental video playback via libmpv with volume slider controls
 
-- Folder view mode
+- Folder view mode with optional flattened directory tree
 
 - Ability to run shell scripts
+
+- Improved GIF file handling on Windows
+
+- Optional debug logging for troubleshooting
 
 ## Default control scheme:
 
