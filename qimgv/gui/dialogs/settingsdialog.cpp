@@ -102,6 +102,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     zoomIndGrp.addButton(ui->zoomIndicatorOn);
 
     // readable language names
+    langs.insert("ar_AR", "العربية");
     langs.insert("de_DE", "Deutsch");
     langs.insert("en_US", "English");
     langs.insert("es_ES", "Español");

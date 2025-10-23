@@ -15,6 +15,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS LinguistTools)
 # 2. Add your .ts filename into TS_FILES list below
 # 3. Translate it with Qt Linguist
 set(TS_FILES
+    "ar_AR.ts"
     "zh_CN.ts"
     "uk_UA.ts"
     "es_ES.ts"
