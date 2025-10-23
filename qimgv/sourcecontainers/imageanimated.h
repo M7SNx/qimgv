@@ -21,6 +21,8 @@ public:
     bool isEdited();
 
     int frameCount();
+    void unload(); // Release file handle for move/rename/delete operations
+    void load();   // Reload after unload to prepare for next operation
 public slots:
     bool save();
     bool save(QString destPath);
@@ -29,7 +31,6 @@ signals:
     void frameChanged(QPixmap*);
 
 private:
-    void load();
     QSize mSize;
     int mFrameCount;
     std::shared_ptr<QMovie> movie;

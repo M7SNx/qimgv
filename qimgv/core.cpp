@@ -636,17 +636,80 @@ void Core::setFoldersDisplay(bool mode) {
 void Core::renameCurrentSelection(QString newName) {
     if(!model->fileCount() || newName.isEmpty() || selectedPath().isEmpty())
         return;
+    
+    qDebug() << "[GIF DEBUG] renameCurrentSelection called with newName:" << newName;
+    qDebug() << "[GIF DEBUG] selectedPath():" << selectedPath();
+    
+    // Close animated images and videos before renaming to release file handles
+    bool reopen = false;
+    std::shared_ptr<Image> img;
+    if(state.currentFilePath == selectedPath()) {
+        img = model->getImage(selectedPath());
+        if(img) {
+            qDebug() << "[GIF DEBUG] Image type:" << img->type() << "Path:" << selectedPath();
+            if(img->type() == ANIMATED) {
+                qDebug() << "[GIF DEBUG] Calling unload() on animated image before rename";
+                std::shared_ptr<ImageAnimated> animImg = std::static_pointer_cast<ImageAnimated>(img);
+                animImg->unload();
+                mw->closeImage();
+                reopen = true;
+            } else if(img->type() == VIDEO) {
+                qDebug() << "[GIF DEBUG] Closing video before rename";
+                mw->closeImage();
+                reopen = true;
+            }
+        }
+    }
+    
     FileOpResult result;
-    model->renameEntry(selectedPath(), newName, false, result);
+    QString oldPath = selectedPath();
+    model->renameEntry(oldPath, newName, false, result);
     if(result == FileOpResult::DESTINATION_DIR_EXISTS) {
+        if(reopen && img && img->type() == ANIMATED) {
+            std::shared_ptr<ImageAnimated> animImg = std::static_pointer_cast<ImageAnimated>(img);
+            animImg->load(); // Reload for next operation
+        }
+        if(reopen)
+            guiSetImage(img);
         mw->toggleRenameOverlay(newName);
     } else if(result == FileOpResult::DESTINATION_FILE_EXISTS) {
         if(mw->showConfirmation(tr("File exists"), tr("Overwrite file?"))) {
-            model->renameEntry(selectedPath(), newName, true, result);
+            model->renameEntry(oldPath, newName, true, result);
         } else {
+            if(reopen && img && img->type() == ANIMATED) {
+                std::shared_ptr<ImageAnimated> animImg = std::static_pointer_cast<ImageAnimated>(img);
+                animImg->load(); // Reload for next operation
+            }
+            if(reopen)
+                guiSetImage(img);
             // show rename dialog again
             mw->toggleRenameOverlay(newName);
         }
+    } else if(result == FileOpResult::SUCCESS) {
+        // SUCCESS: After rename, get the NEW image from model and display it
+        qDebug() << "[GIF DEBUG] Rename succeeded, old path:" << oldPath << "new path:" << selectedPath();
+        if(reopen) {
+            // Give model time to update its file list
+            qApp->processEvents(QEventLoop::AllEvents);
+            QThread::msleep(20);
+            // Get the newly renamed image from model
+            QString newPath = selectedPath();
+            qDebug() << "[GIF DEBUG] Loading renamed image from path:" << newPath;
+            state.currentImg = model->getImage(newPath);
+            if(state.currentImg) {
+                state.currentFilePath = newPath;
+                guiSetImage(state.currentImg);
+            } else {
+                qDebug() << "[GIF DEBUG] ERROR: Could not get renamed image from model!";
+            }
+        }
+    } else if(result != FileOpResult::SUCCESS && reopen) {
+        // FAILED: Reload and reopen the image at old path
+        if(img && img->type() == ANIMATED) {
+            std::shared_ptr<ImageAnimated> animImg = std::static_pointer_cast<ImageAnimated>(img);
+            animImg->load(); // Reload for next operation
+        }
+        guiSetImage(img);
     }
     outputError(result);
 }
@@ -656,18 +719,58 @@ FileOpResult Core::removeFile(QString filePath, bool trash) {
         return FileOpResult::NOTHING_TO_DO;
 
     bool reopen = false;
-    std::shared_ptr<Image> img;
+    DocumentType imgType = NONE;
+    qDebug() << "[GIF DEBUG] removeFile called - filePath:" << filePath << "trash:" << trash;
+    qDebug() << "[GIF DEBUG] state.currentFilePath:" << state.currentFilePath;
+    
     if(state.currentFilePath == filePath) {
-        img = model->getImage(filePath);
-        if(img->type() == ANIMATED || img->type() == VIDEO) {
+        std::shared_ptr<Image> img = model->getImage(filePath);
+        if(img) {
+            imgType = img->type();
+            qDebug() << "[GIF DEBUG] removeFile - Image type:" << imgType << "Path:" << filePath;
+            if(imgType == ANIMATED) {
+                qDebug() << "[GIF DEBUG] Calling unload() on animated image before delete";
+                std::shared_ptr<ImageAnimated> animImg = std::static_pointer_cast<ImageAnimated>(img);
+                animImg->unload();
+                // Release the shared_ptr to allow destructor to run
+                img.reset();
+                animImg.reset();
+                qDebug() << "[GIF DEBUG] All shared_ptrs released";
+            } else if(imgType == VIDEO) {
+                qDebug() << "[GIF DEBUG] Closing video before delete";
+            }
+            // Close image viewer and remove from cache for ALL file types
             mw->closeImage();
+            model->unload(filePath);
+            // Force multiple event processing cycles to fully release all references
+            for(int i = 0; i < 5; i++) {
+                qApp->processEvents(QEventLoop::AllEvents);
+                QThread::msleep(50);
+            }
+            qDebug() << "[GIF DEBUG] Unload complete, proceeding with delete/trash";
             reopen = true;
         }
+    } else {
+        qDebug() << "[GIF DEBUG] WARNING: state.currentFilePath does not match filePath!";
     }
     FileOpResult result;
     model->removeFile(filePath, trash, result);
-    if(result != FileOpResult::SUCCESS && reopen)
-        guiSetImage(img);
+    qDebug() << "[GIF DEBUG] removeFile result:" << (int)result;
+    if(result != FileOpResult::SUCCESS && reopen) {
+        // Delete failed, need to reload
+        if(imgType == ANIMATED) {
+            qDebug() << "[GIF DEBUG] Delete failed, reloading animated image";
+            model->reload(filePath);
+            std::shared_ptr<Image> reloadedImg = model->getImage(filePath);
+            guiSetImage(reloadedImg);
+        } else {
+            qDebug() << "[GIF DEBUG] Delete failed, reloading image";
+            model->reload(filePath);
+            std::shared_ptr<Image> reloadedImg = model->getImage(filePath);
+            guiSetImage(reloadedImg);
+        }
+    }
+    // If delete succeeded, the file is gone so no need to reload
     return result;
 }
 
@@ -908,17 +1011,38 @@ void Core::moveCurrentFile(QString destDirectory) {
         return;
     // pause updates to avoid flicker
     mw->setUpdatesEnabled(false);
+    // Unload animated images to release file handles before move
+    std::shared_ptr<Image> img = model->getImage(selectedPath());
+    bool wasAnimated = false;
+    if(img) {
+        qDebug() << "[GIF DEBUG] moveCurrentFile - Image type:" << img->type() << "Path:" << selectedPath();
+        if(img->type() == ANIMATED) {
+            qDebug() << "[GIF DEBUG] Calling unload() on animated image before move";
+            std::shared_ptr<ImageAnimated> animImg = std::static_pointer_cast<ImageAnimated>(img);
+            animImg->unload();
+            wasAnimated = true;
+        } else if(img->type() == VIDEO) {
+            qDebug() << "[GIF DEBUG] Video file - will be closed by closeImage()";
+        }
+    }
     // move fails during file playback, so we close it temporarily
     mw->closeImage();
     FileOpResult result;
     model->moveFileTo(selectedPath(), destDirectory, false, result);
     if(result == FileOpResult::SUCCESS) {
         mw->showMessageSuccess(tr("File moved."));
+        // File moved successfully, no need to reload (file is at new location)
     } else if(result == FileOpResult::DESTINATION_FILE_EXISTS) {
         if(mw->showConfirmation(tr("File exists"), tr("Destination file exists. Overwrite?")))
             model->moveFileTo(selectedPath(), destDirectory, true, result);
     }
     if(result != FileOpResult::SUCCESS) {
+        // Move failed, need to reload the animated image
+        if(wasAnimated && img) {
+            qDebug() << "[GIF DEBUG] Move failed, reloading animated image";
+            std::shared_ptr<ImageAnimated> animImg = std::static_pointer_cast<ImageAnimated>(img);
+            animImg->load();
+        }
         guiSetImage(model->getImage(selectedPath()));
         updateInfoString();
         if(result != FileOpResult::DESTINATION_FILE_EXISTS)
@@ -1271,7 +1395,8 @@ bool Core::loadFileIndex(int index, bool async, bool preload) {
     auto entry = model->fileEntryAt(index);
     if(entry.path.isEmpty())
         return false;
-    state.currentFilePath = entry.path;
+    // Clean path to remove double slashes and normalize separators
+    state.currentFilePath = QDir::cleanPath(entry.path);
     model->unloadExcept(entry.path, preload);
     model->load(entry.path, async);
     if(preload) {

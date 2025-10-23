@@ -328,7 +328,7 @@ void DirectoryManager::addEntriesFromDirectory(std::vector<FSEntry> &entryVec, Q
         if(!settings->showHiddenFiles() && name.startsWith("."))
             continue;
 #else
-        DWORD attributes = GetFileAttributes(entry.path().generic_string().c_str());
+        DWORD attributes = GetFileAttributesW(entry.path().wstring().c_str());
         if(!settings->showHiddenFiles() && attributes & FILE_ATTRIBUTE_HIDDEN)
             continue;
 #endif
@@ -454,7 +454,7 @@ void DirectoryManager::updateFileEntry(const QString &filePath) {
 
 void DirectoryManager::renameFileEntry(const QString &oldFilePath, const QString &newFileName) {
     QFileInfo fi(oldFilePath);
-    QString newFilePath = fi.absolutePath() + "/" + newFileName;
+    QString newFilePath = QDir::cleanPath(fi.absolutePath() + "/" + newFileName);
     if(!containsFile(oldFilePath)) {
         if(containsFile(newFilePath))
             updateFileEntry(newFilePath);

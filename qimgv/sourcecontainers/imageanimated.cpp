@@ -20,6 +20,20 @@ ImageAnimated::ImageAnimated(std::unique_ptr<DocumentInfo> _info)
 }
 
 ImageAnimated::~ImageAnimated() {
+    unload();
+}
+
+void ImageAnimated::unload() {
+    qDebug() << "[GIF DEBUG] ImageAnimated::unload() called for:" << mPath;
+    if(movie) {
+        qDebug() << "[GIF DEBUG] Stopping and resetting QMovie";
+        movie->stop();
+        movie.reset();
+        qDebug() << "[GIF DEBUG] QMovie released";
+    } else {
+        qDebug() << "[GIF DEBUG] No QMovie to release";
+    }
+    mLoaded = false;
 }
 
 void ImageAnimated::load() {
@@ -78,8 +92,10 @@ std::shared_ptr<const QImage> ImageAnimated::getImage() {
 }
 
 std::shared_ptr<QMovie> ImageAnimated::getMovie() {
-    if(movie == nullptr)
+    if(movie == nullptr) {
+        qDebug() << "[GIF DEBUG] getMovie() called with null movie, reloading:" << mPath;
         loadMovie();
+    }
     return movie;
 }
 

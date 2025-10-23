@@ -366,8 +366,12 @@ bool FileOperations::moveToTrashImpl(const QString &file) {
     QFileInfo fileinfo( file );
     if( !fileinfo.exists() )
         return false;
-    WCHAR* from = (WCHAR*) calloc((size_t)fileinfo.absoluteFilePath().length() + 2, sizeof(WCHAR));
-    fileinfo.absoluteFilePath().toWCharArray(from);    
+    // SHFileOperationW requires double-null-terminated string
+    // Allocate: string length + 1 (first null) + 1 (second null)
+    QString absolutePath = QDir::toNativeSeparators(fileinfo.absoluteFilePath());
+    WCHAR* from = (WCHAR*) calloc((size_t)absolutePath.length() + 2, sizeof(WCHAR));
+    absolutePath.toWCharArray(from);
+    // toWCharArray doesn't add null terminators, but calloc already zeroed the memory
     SHFILEOPSTRUCTW fileop;
     memset( &fileop, 0, sizeof( fileop ) );
     fileop.wFunc = FO_DELETE;
@@ -376,8 +380,9 @@ bool FileOperations::moveToTrashImpl(const QString &file) {
     int rv = SHFileOperationW( &fileop );
     free(from);
     if( 0 != rv ){
-        qDebug() << rv << QString::number( rv ).toInt( nullptr, 8 );
-        qDebug() << "move to trash failed";
+        qDebug() << "[DELETE DEBUG] SHFileOperationW failed with code:" << rv << "octal:" << QString::number( rv ).toInt( nullptr, 8 );
+        qDebug() << "[DELETE DEBUG] File:" << absolutePath;
+        qDebug() << "[DELETE DEBUG] move to trash failed";
         return false;
     }
     return true;

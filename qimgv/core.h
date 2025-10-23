@@ -16,6 +16,7 @@
 #include "gui/mainwindow.h"
 #include "utils/randomizer.h"
 #include "gui/dialogs/printdialog.h"
+#include "sourcecontainers/imageanimated.h"
 
 #ifdef __GLIBC__
 #include <malloc.h>
