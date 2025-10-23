@@ -309,6 +309,9 @@ public:
     bool showHiddenFiles();
     void setShowHiddenFiles(bool mode);
 
+    bool enableDebugLog();
+    void setEnableDebugLog(bool mode);
+
 private:
     explicit Settings(QObject *parent = nullptr);
     QSettings *settingsConf, *stateConf, *themeConf;

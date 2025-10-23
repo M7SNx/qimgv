@@ -146,6 +146,18 @@ int main(int argc, char *argv[]) {
 
     atexit(saveSettings);
 
+#ifdef _WIN32
+    // Set up debug logging to file on Windows if enabled in settings
+    if(settings->enableDebugLog()) {
+        logFile = new QFile("qimgv_debug.log");
+        if(logFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+            logStream = new QTextStream(logFile);
+            qInstallMessageHandler(messageHandler);
+            qDebug() << "=== qimgv debug log started ===";
+        }
+    }
+#endif
+
 // parse args ------------------------------------------------------------------
     QCommandLineParser parser;
     QString appDescription = qApp->applicationName() + " - Fast and configurable image viewer.";

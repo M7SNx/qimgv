@@ -1196,3 +1196,11 @@ bool Settings::showHiddenFiles() {
 void Settings::setShowHiddenFiles(bool mode) {
     settings->settingsConf->setValue("showHiddenFiles", mode);
 }
+//------------------------------------------------------------------------------
+bool Settings::enableDebugLog() {
+    return settings->settingsConf->value("enableDebugLog", false).toBool();
+}
+
+void Settings::setEnableDebugLog(bool mode) {
+    settings->settingsConf->setValue("enableDebugLog", mode);
+}

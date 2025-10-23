@@ -1556,6 +1556,13 @@
                       </property>
                      </widget>
                     </item>
+                    <item>
+                     <widget class="QCheckBox" name="enableDebugLogCheckBox">
+                      <property name="text">
+                       <string>Enable debug logging (restart required)</string>
+                      </property>
+                     </widget>
+                    </item>
                    </layout>
                   </item>
                  </layout>
