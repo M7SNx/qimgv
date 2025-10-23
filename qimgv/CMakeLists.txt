@@ -46,7 +46,7 @@ add_executable(qimgv
     proxystyle.cpp
     macosapplication.cpp
     resources.qrc
-    # qimgv.rc  # Temporarily disabled due to windres path issue
+    qimgv.rc
     ${APPLE_ICON_PATH}
     ${QM_FILES}
 )
