@@ -66,16 +66,6 @@ QDataStream& operator>>(QDataStream& in, Script& v) {
 //------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
-#ifdef _WIN32
-    // Set up debug logging to file on Windows
-    logFile = new QFile("qimgv_debug.log");
-    if(logFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        logStream = new QTextStream(logFile);
-        qInstallMessageHandler(messageHandler);
-        qDebug() << "=== qimgv debug log started ===";
-    }
-#endif
-
     // force some env variables
 
 #ifdef _WIN32
