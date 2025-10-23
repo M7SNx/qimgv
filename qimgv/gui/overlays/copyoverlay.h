@@ -1,29 +1,29 @@
 #pragma once
 
-#include <QGridLayout>
-#include <QPushButton>
-#include <QLineEdit>
-#include <QKeyEvent>
 #include "gui/customwidgets/overlaywidget.h"
-#include "gui/customwidgets/pathselectormenuitem.h"
-#include "settings.h"
-#include "components/actionmanager/actionmanager.h"
+#include <QMap>
+
+class QKeyEvent;
+class QWheelEvent;
+class FloatingWidgetContainer;
+class PathSelectorMenuItem;
+class AddPathMenuItem;
+
+namespace Ui {
+    class CopyOverlay;
+}
 
 enum CopyOverlayMode {
     OVERLAY_COPY,
     OVERLAY_MOVE
 };
 
-namespace Ui {
-    class CopyOverlay;
-}
-
 class CopyOverlay : public OverlayWidget {
     Q_OBJECT
 public:
     CopyOverlay(FloatingWidgetContainer *parent);
     ~CopyOverlay();
-    void saveSettings();    
+    void saveSettings();
     void setDialogMode(CopyOverlayMode _mode);
     CopyOverlayMode operationMode();
 
@@ -36,23 +36,32 @@ signals:
     void moveRequested(QString);
 
 protected:
-    void keyPressEvent(QKeyEvent *event);
+    void keyPressEvent(QKeyEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
+    bool focusNextPrevChild(bool) override;
 
-    bool focusNextPrevChild(bool);
 private slots:
     void requestFileOperation(QString path);
     void readSettings();
+    void nextPage();
+    void prevPage();
+    void addNewPath(QString path);
 
 private:
     void createDefaultPaths();
     void createPathWidgets();
     void createShortcuts();
+    void removePathWidgets();
+    void updatePageUI();
+
     Ui::CopyOverlay *ui;
     QList<PathSelectorMenuItem*> pathWidgets;
-    const int maxPathCount = 9;
+    QList<AddPathMenuItem*> addPathWidgets;  // Track "Add New Path" items
     QStringList paths;
     QMap<QString, int> shortcuts;
     CopyOverlayMode mode;
-    void removePathWidgets();
 
+    int currentPage;
+    const int itemsPerPage = 9;
+    bool pathWidgetsCreated;
 };

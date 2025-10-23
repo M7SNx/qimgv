@@ -149,5 +149,7 @@
         <file>res/icons/common/overlay/arrow_right_50.png</file>
         <file>res/icons/common/overlay/arrow_left_50@2x.png</file>
         <file>res/icons/common/overlay/arrow_right_50@2x.png</file>
+        <file>res/icons/common/overlay/arrow_left_20.png</file>
+        <file>res/icons/common/overlay/arrow_right_20.png</file>
     </qresource>
 </RCC>

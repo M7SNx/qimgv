@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>220</width>
-    <height>270</height>
+    <width>240</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>200</width>
-    <height>0</height>
+    <height>350</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -33,9 +33,6 @@
   </property>
   <property name="windowTitle">
    <string notr="true">Form</string>
-  </property>
-  <property name="accessibleName">
-   <string notr="true"/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -92,12 +89,6 @@
         <property name="accessibleName">
          <string notr="true">OverlayHeaderLabel</string>
         </property>
-        <property name="text">
-         <string notr="true"/>
-        </property>
-        <property name="margin">
-         <number>0</number>
-        </property>
        </widget>
       </item>
       <item>
@@ -111,23 +102,77 @@
     </widget>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="pathSelectorsLayout">
-     <property name="spacing">
-      <number>0</number>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
      </property>
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-    </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="footerWidget" native="true">
+     <layout class="QHBoxLayout" name="footerLayout">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="leftMargin">
+       <number>4</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>4</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="IconButton" name="prevButton" native="true"/>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="pageIndicator">
+        <property name="text">
+         <string>(1 / 1)</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="IconButton" name="nextButton" native="true"/>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>
@@ -152,16 +197,6 @@
    <signal>clicked()</signal>
    <receiver>CopyOverlay</receiver>
    <slot>hide()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>274</x>
-     <y>58</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>295</x>
-     <y>97</y>
-    </hint>
-   </hints>
   </connection>
  </connections>
 </ui>

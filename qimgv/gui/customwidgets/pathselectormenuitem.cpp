@@ -33,11 +33,20 @@ void PathSelectorMenuItem::setDirectory(QString path) {
     mDirectory = path;
     mPath = path;
     QString stripped;
+    
+    // Handle empty paths safely
+    if (path.isEmpty()) {
+        stripped = "";
+    } else {
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-    stripped = mDirectory.split("/").last();
+        QStringList parts = mDirectory.split("/");
+        stripped = parts.isEmpty() ? "" : parts.last();
 #else
-    stripped = mDirectory.split("/", Qt::SkipEmptyParts).last();
+        QStringList parts = mDirectory.split("/", Qt::SkipEmptyParts);
+        stripped = parts.isEmpty() ? "" : parts.last();
 #endif
+    }
+    
     this->mTextLabel.setText(stripped);
 }
 

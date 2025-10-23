@@ -3,8 +3,9 @@
 MenuItem::MenuItem(QWidget *parent)
     : QWidget(parent)
 {
-    mLayout.setContentsMargins(6,0,8,0);
-    mLayout.setSpacing(2);
+    mLayout = new QHBoxLayout(this);
+    mLayout->setContentsMargins(6,0,8,0);
+    mLayout->setSpacing(2);
 
     setAccessibleName("MenuItem");
     this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
@@ -19,17 +20,15 @@ MenuItem::MenuItem(QWidget *parent)
     mIconWidget.setAccessibleName("MenuItemIcon");
     mTextLabel.setAccessibleName("MenuItemText");
     mShortcutLabel.setAccessibleName("MenuItemShortcutLabel");
-    mLayout.addWidget(&mIconWidget);
-    mLayout.addWidget(&mTextLabel);
-    mLayout.addSpacerItem(spacer);
-    mLayout.addWidget(&mShortcutLabel);
-    mLayout.setStretch(1,1);
-
-    setLayout(&mLayout);
+    mLayout->addWidget(&mIconWidget);
+    mLayout->addWidget(&mTextLabel);
+    mLayout->addSpacerItem(spacer);
+    mLayout->addWidget(&mShortcutLabel);
+    mLayout->setStretch(1,1);
 }
 
 MenuItem::~MenuItem() {
-    delete spacer;
+    // Qt will delete mLayout and spacer automatically when this widget is destroyed
 }
 
 void MenuItem::setText(QString text) {
